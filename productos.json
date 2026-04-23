@@ -1,0 +1,10 @@
+[
+  {
+    "id": 1,
+    "nombre": "Extensi�n Cubull 10m",
+    "categoria": "ELECTRICIDAD",
+    "stockActual": 5,
+    "stockMinimo": 2,
+    "activo": false
+  }
+]

@@ -1,16 +1,12 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- */
-
 package com.mycompany.proyecto_ferreteria;
 
-/**
- *
- * @author nicol
- */
+import com.mycompany.proyecto_ferreteria.ui.MenuUI;
+
 public class Proyecto_Ferreteria {
 
     public static void main(String[] args) {
-        System.out.println("Hello World!");
+        // Se instancia la interfaz visual y la iniciamos.
+        MenuUI ui = new MenuUI();
+        ui.iniciar();
     }
 }
