@@ -1,160 +1,125 @@
 package com.mycompany.proyecto_ferreteria.service;
 
-import com.mycompany.proyecto_ferreteria.model.Movimiento;
-import com.mycompany.proyecto_ferreteria.model.Producto;
-import com.mycompany.proyecto_ferreteria.model.Usuario;
+import com.mycompany.proyecto_ferreteria.model.*;
 import com.mycompany.proyecto_ferreteria.persistence.GestorPersistencia;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
-import java.util.stream.Collectors;
 
 public class InventarioService {
     private List<Producto> productos;
-    private Stack<Movimiento> historialMovimientos; 
+    private List<Categoria> categorias; 
+    private List<Almacen> almacenes;
+    private List<Proveedor> proveedores;
+    private Stack<Movimiento> historialMovimientos;
     private GestorPersistencia gestor;
 
     public InventarioService() {
         this.gestor = new GestorPersistencia();
         this.productos = gestor.cargarProductos();
         this.historialMovimientos = new Stack<>();
+        this.categorias = new ArrayList<>();
+        this.almacenes = new ArrayList<>();
+        this.proveedores = new ArrayList<>();
+        cargarDatosMaestros(); 
     }
 
-    // Gestión de los Productos: agregar, buscar, desactivar.
-
-    public void agregarProducto(String nombre, String categoria, int stockActual, int stockMinimo) {
-        int nuevoId = generarNuevoId();
-        Producto p = new Producto(nuevoId, nombre, categoria, stockActual, stockMinimo);
-        productos.add(p);
-        guardarCambios();
-        System.out.println("[ÉXITO] Producto agregado: " + nombre + " (ID: " + nuevoId + ")");
+    private void cargarDatosMaestros() {
+        // Categorías
+        categorias.add(new Categoria(1, "HERRAMIENTAS", "Herramientas manuales y eléctricas"));
+        categorias.add(new Categoria(2, "ELECTRICIDAD", "Cables, focos y tableros"));
+        categorias.add(new Categoria(3, "PINTURA", "Látex, esmaltes y brochas"));
+        
+        // Almacenes
+        almacenes.add(new Almacen(1, "Principal", "Pasillo A"));
+        almacenes.add(new Almacen(2, "Exhibición", "Estante 4"));
+        
+        // Proveedores
+        proveedores.add(new Proveedor(1, "TROPER.", "20123456789", "987654321"));
     }
 
+    
     public Producto buscarProducto(int id) {
         for (Producto p : productos) {
-            if (p.getId() == id) {
-                return p;
-            }
+            if (p.getId() == id) return p;
         }
-        return null; 
+        return null;
     }
 
-    public void desactivarProducto(int id) {
-        Producto p = buscarProducto(id);
-        if (p != null) {
-            p.setActivo(false);
-            guardarCambios();
-            System.out.println("[ÉXITO] Producto desactivado.");
-        } else {
-            System.out.println("[ERROR] Producto no encontrado.");
+    public Producto buscarProducto(String nombre) {
+        for (Producto p : productos) {
+            if (p.getNombre().equalsIgnoreCase(nombre)) return p;
         }
+        return null;
     }
 
-    // Gestión del Inventario y Movimientos.
-
-    public void registrarMovimiento(int idProducto, String tipo, int cantidad, String motivo, Usuario usuario) {
-        Producto p = buscarProducto(idProducto);
+    public void agregarProducto(String nombre, int idCat, int idAlm, int stock, int min) {
+        Categoria cat = buscarCategoria(idCat);
+        Almacen alm = buscarAlmacen(idAlm);
         
-        if (p == null) {
-            System.out.println("[ERROR] Producto no existe.");
-            return;
-        }
-        if (!p.isActivo()) {
-            System.out.println("[ERROR] No se puede operar sobre un producto inactivo.");
-            return;
-        }
-        if (cantidad <= 0) {
-            System.out.println("[ERROR] La cantidad debe ser mayor a 0.");
-            return;
-        }
-
-        if (tipo.equalsIgnoreCase("SALIDA")) {
-            if (p.getStockActual() < cantidad) {
-                System.out.println("[ERROR] Stock insuficiente. Stock actual: " + p.getStockActual());
-                return;
-            }
-            p.setStockActual(p.getStockActual() - cantidad);
-        } else if (tipo.equalsIgnoreCase("ENTRADA")) {
-            p.setStockActual(p.getStockActual() + cantidad);
+        if (cat != null && alm != null) {
+            int nuevoId = productos.isEmpty() ? 1 : productos.get(productos.size() - 1).getId() + 1;
+            Producto p = new Producto(nuevoId, nombre, cat, alm, stock, min);
+            productos.add(p);
+            gestor.guardarProductos(productos);
+            System.out.println("[ÉXITO] Producto registrado en: " + alm.getUbicacionCompleta());
         } else {
-            System.out.println("[ERROR] Tipo de movimiento inválido.");
-            return;
+            System.out.println("[ERROR] Categoría o Almacén no válidos.");
         }
+    }
 
-        // Registrar en el historial y guardar.
-        Movimiento mov = new Movimiento(tipo, idProducto, cantidad, motivo, usuario.getNombre());
-        historialMovimientos.push(mov);
-        guardarCambios();
+    public void registrarEntrada(int idProd, int cant, String mot, Usuario user, int idProv) {
+        Producto p = buscarProducto(idProd);
+        Proveedor prov = buscarProveedor(idProv);
         
-        System.out.println("[ÉXITO] Movimiento registrado. Nuevo stock: " + p.getStockActual());
-        verificarAlertaStock(p);
-    }
-
-    public void revertirUltimoMovimiento(Usuario usuario) {
-        if (!usuario.esAdmin()) {
-            System.out.println("[ERROR] Solo un ADMIN puede revertir movimientos.");
-            return;
-        }
-        if (historialMovimientos.isEmpty()) {
-            System.out.println("[INFO] No hay movimientos para revertir.");
-            return;
-        }
-
-        Movimiento ultimo = historialMovimientos.pop();
-        Producto p = buscarProducto(ultimo.getProductoId());
-
-        if (p != null) {
-            if (ultimo.getTipo().equalsIgnoreCase("ENTRADA")) {
-                p.setStockActual(p.getStockActual() - ultimo.getCantidad());
-            } else {
-                p.setStockActual(p.getStockActual() + ultimo.getCantidad());
-            }
-            guardarCambios();
-            System.out.println("[ÉXITO] Se revirtió el movimiento: " + ultimo.getTipo() + " de " + ultimo.getCantidad() + " unidades.");
+        if (p != null && prov != null && p.isActivo()) {
+            p.setStockActual(p.getStockActual() + cant);
+            Movimiento mov = new Movimiento("ENTRADA", idProd, cant, mot + " (Prov: " + prov.getNombreEmpresa() + ")", user.getNombre());
+            historialMovimientos.push(mov);
+            gestor.guardarProductos(productos);
+            System.out.println("[ÉXITO] Stock actualizado. Proveedor: " + prov.getNombreEmpresa());
         }
     }
 
-    // Reportes
+    public void registrarSalida(int idProd, int cant, String mot, Usuario user) {
+        Producto p = buscarProducto(idProd);
+        if (p != null && p.isActivo() && p.getStockActual() >= cant) {
+            p.setStockActual(p.getStockActual() - cant);
+            Movimiento mov = new Movimiento("SALIDA", idProd, cant, mot, user.getNombre());
+            historialMovimientos.push(mov);
+            gestor.guardarProductos(productos);
+            System.out.println("[ÉXITO] Salida registrada.");
+        } else {
+            System.out.println("[ERROR] No se pudo realizar la salida (Stock insuficiente o inactivo).");
+        }
+    }
+
+    public Categoria buscarCategoria(int id) {
+        return categorias.stream().filter(c -> c.getIdCat() == id).findFirst().orElse(null);
+    }
+
+    public Almacen buscarAlmacen(int id) {
+        return almacenes.stream().filter(a -> a.getidAlm() == id).findFirst().orElse(null);
+    }
+
+    public Proveedor buscarProveedor(int id) {
+        return proveedores.stream().filter(pr -> pr.getidProv() == id).findFirst().orElse(null);
+    }
+
+    public void mostrarCategorias() {
+        categorias.forEach(c -> System.out.println(c.getIdCat() + ". " + c.getNombre()));
+    }
+
+    public void mostrarAlmacenes() {
+        almacenes.forEach(a -> System.out.println(a.getidAlm() + ". " + a.getUbicacionCompleta()));
+    }
+
+    public void mostrarProveedores() {
+        proveedores.forEach(p -> System.out.println(p.toString()));
+    }
 
     public void mostrarTodosLosProductos() {
-        System.out.println("\n--- LISTA DE PRODUCTOS ---");
-        System.out.println("| ID   | Nombre               | Categoría       | Stock    | Min      | Estado   |");
-        System.out.println("----------------------------------------------------------------------------------");
-        for (Producto p : productos) {
-            System.out.println(p.toString());
-        }
-    }
-
-    public void mostrarAlertas() {
-        System.out.println("\n--- ALERTAS DE STOCK BAJO ---");
-        boolean hayAlertas = false;
-        for (Producto p : productos) {
-            if (p.isActivo() && p.getStockActual() <= p.getStockMinimo()) {
-                System.out.println("⚠️ [ALERTA] " + p.getNombre() + " tiene stock crítico: " + p.getStockActual() + " (Mínimo: " + p.getStockMinimo() + ")");
-                hayAlertas = true;
-            }
-        }
-        if (!hayAlertas) System.out.println("Todo el stock está en niveles óptimos.");
-    }
-
-    private void verificarAlertaStock(Producto p) {
-        if (p.getStockActual() <= p.getStockMinimo()) {
-            System.out.println("⚠️ [ALERTA] El producto " + p.getNombre() + " ha alcanzado su nivel de stock mínimo.");
-        }
-    }
-
-    private int generarNuevoId() {
-        int maxId = 0;
-        for (Producto p : productos) {
-            if (p.getId() > maxId) {
-                maxId = p.getId();
-            }
-        }
-        return maxId + 1;
-    }
-
-    private void guardarCambios() {
-        gestor.guardarProductos(productos);
+        System.out.println("\n| ID   | NOMBRE          | CATEGORIA    | UBICACIÓN            | STOCK  | ACTIVO |");
+        productos.forEach(p -> System.out.println(p.toString()));
     }
 }
