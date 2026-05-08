@@ -122,4 +122,8 @@ public class InventarioService {
         System.out.println("\n| ID   | NOMBRE          | CATEGORIA    | UBICACIÓN            | STOCK  | ACTIVO |");
         productos.forEach(p -> System.out.println(p.toString()));
     }
+    
+    public java.util.List<Producto> getProductos() {
+        return this.productos;
+    }
 }

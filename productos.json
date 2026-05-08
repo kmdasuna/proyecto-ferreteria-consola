@@ -1,0 +1,36 @@
+[
+  {
+    "id": 1,
+    "nombre": "Enchufe",
+    "categoria": {
+      "IdCat": 2,
+      "nombre": "ELECTRICIDAD",
+      "descripcion": "Cables, focos y tableros"
+    },
+    "ubicacion": {
+      "idAlm": 2,
+      "nombre": "Exhibición",
+      "seccion": "Estante 4"
+    },
+    "stockActual": 24,
+    "stockMinimo": 2,
+    "activo": true
+  },
+  {
+    "id": 2,
+    "nombre": "Wincha",
+    "categoria": {
+      "IdCat": 2,
+      "nombre": "ELECTRICIDAD",
+      "descripcion": "Cables, focos y tableros"
+    },
+    "ubicacion": {
+      "idAlm": 1,
+      "nombre": "Principal",
+      "seccion": "Pasillo A"
+    },
+    "stockActual": 21,
+    "stockMinimo": 3,
+    "activo": true
+  }
+]
