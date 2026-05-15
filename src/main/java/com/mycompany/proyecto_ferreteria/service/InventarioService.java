@@ -118,10 +118,13 @@ public class InventarioService {
         proveedores.forEach(p -> System.out.println(p.toString()));
     }
 
-    public void mostrarTodosLosProductos() {
-        System.out.println("\n| ID   | NOMBRE          | CATEGORIA    | UBICACIÓN            | STOCK  | ACTIVO |");
-        productos.forEach(p -> System.out.println(p.toString()));
-    }
+  public void mostrarTodosLosProductos() {
+    System.out.println("\n| ID   | NOMBRE          | CATEGORIA    | UBICACIÓN            | STOCK  | ACTIVO | AVISO");
+    productos.forEach(p -> {
+        String aviso = (p.getStockActual() <= p.getStockMinimo()) ? "[ STOCK BAJO ]" : "";
+        System.out.println(p.toString() + " " + aviso);
+    });
+}
     
     public java.util.List<Producto> getProductos() {
         return this.productos;

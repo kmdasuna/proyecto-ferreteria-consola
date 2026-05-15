@@ -32,5 +32,39 @@
     "stockActual": 21,
     "stockMinimo": 3,
     "activo": true
+  },
+  {
+    "id": 3,
+    "nombre": "hoz",
+    "categoria": {
+      "IdCat": 2,
+      "nombre": "ELECTRICIDAD",
+      "descripcion": "Cables, focos y tableros"
+    },
+    "ubicacion": {
+      "idAlm": 1,
+      "nombre": "Principal",
+      "seccion": "Pasillo A"
+    },
+    "stockActual": 1,
+    "stockMinimo": 2,
+    "activo": true
+  },
+  {
+    "id": 4,
+    "nombre": "martillo",
+    "categoria": {
+      "IdCat": 1,
+      "nombre": "HERRAMIENTAS",
+      "descripcion": "Herramientas manuales y eléctricas"
+    },
+    "ubicacion": {
+      "idAlm": 1,
+      "nombre": "Principal",
+      "seccion": "Pasillo A"
+    },
+    "stockActual": 2,
+    "stockMinimo": 2,
+    "activo": true
   }
 ]
